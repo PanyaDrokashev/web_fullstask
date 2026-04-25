@@ -1,6 +1,8 @@
 import { getBackendOrigin } from "@/shared/api/base-url";
+import { getBackendApiBaseUrl } from "@/shared/api/base-url";
 
 const BACKEND_ORIGIN = getBackendOrigin();
+const BACKEND_API_BASE_URL = getBackendApiBaseUrl();
 
 function startsWithHttp(value: string): boolean {
   return value.startsWith("http://") || value.startsWith("https://");
@@ -38,6 +40,55 @@ export function getCatalogColorPreviewUrl(dir: string, colorTag: string): string
   const encodedDir = encodeURIComponent(dir);
   const encodedColor = encodeURIComponent(`${colorTag.normalize("NFD")}.jpg`);
   return `${BACKEND_ORIGIN}/bruska/content/catalog/color-image/${encodedDir}/${encodedColor}`;
+}
+
+function normalizeForCompare(value: string): string {
+  return value.trim().normalize("NFD");
+}
+
+function toDecodedFileStem(urlOrPath: string): string {
+  const pathPart = urlOrPath.split("?")[0];
+  const fileName = pathPart.split("/").pop() ?? "";
+  const decoded = decodeURIComponent(fileName);
+  const extIdx = decoded.lastIndexOf(".");
+  if (extIdx <= 0) {
+    return normalizeForCompare(decoded);
+  }
+  return normalizeForCompare(decoded.slice(0, extIdx));
+}
+
+export async function getCatalogColorPreviewMap(
+  dir: string,
+  colorTags: string[],
+): Promise<Record<string, string>> {
+  const response = await fetch(
+    `${BACKEND_API_BASE_URL}/content/catalog/slides/${encodeURIComponent(dir)}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to load slides for ${dir}`);
+  }
+
+  const slides = (await response.json()) as string[];
+  const byStem = new Map<string, string>();
+  for (const slideURL of slides) {
+    byStem.set(toDecodedFileStem(slideURL), slideURL);
+  }
+
+  const result: Record<string, string> = {};
+  for (const colorTag of colorTags) {
+    const stem = normalizeForCompare(colorTag);
+    const matched = byStem.get(stem);
+    if (matched) {
+      result[colorTag] = matched;
+      continue;
+    }
+
+    // fallback to previous backend resolver endpoint
+    result[colorTag] = getCatalogColorPreviewUrl(dir, colorTag);
+  }
+
+  return result;
 }
 
 export function getCatalogCardImageUrl(

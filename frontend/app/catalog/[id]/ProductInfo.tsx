@@ -4,7 +4,7 @@ import Slider from "@/components/ui/Slider";
 import { ICatalogColors, ICatalogItem } from "@/shared/types/content";
 import {Button} from "@heroui/button";
 import ColorItem from "./ColorItem";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Tab, Tabs} from "@heroui/tabs";
 import {Input} from "@heroui/react";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -13,7 +13,7 @@ import Discount from "@/app/catalog/[id]/Discount";
 import {useCartStore} from "@/store/cartStore";
 import {useRouter} from "next/navigation";
 import {downloadFile} from "@/hooks/downloadFile";
-import { getCatalogColorPreviewUrl } from "@/shared/api/catalog-assets";
+import { getCatalogColorPreviewMap, getCatalogColorPreviewUrl } from "@/shared/api/catalog-assets";
 
 interface IProductInfoProps {
   product: ICatalogItem;
@@ -25,6 +25,7 @@ function InfoTitle({text}: { text: string }) {
 
 export default function ProductInfo({product}: IProductInfoProps) {
   const [currentColor, setCurrentColor] = useState(product.colors[0]);
+  const [colorPreviewMap, setColorPreviewMap] = useState<Record<string, string>>({});
   const [area, setArea] = useState(0);
   const [currentPrice, setCurrentPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -32,6 +33,30 @@ export default function ProductInfo({product}: IProductInfoProps) {
   const router = useRouter()
 
   const addItem = useCartStore((state) => state.addItem);
+
+  useEffect(() => {
+    let canceled = false;
+    const loadColorPreviews = async () => {
+      try {
+        const map = await getCatalogColorPreviewMap(
+          product.dir,
+          product.colors.map((c) => c.tag),
+        );
+        if (!canceled) {
+          setColorPreviewMap(map);
+        }
+      } catch {
+        if (!canceled) {
+          setColorPreviewMap({});
+        }
+      }
+    };
+
+    void loadColorPreviews();
+    return () => {
+      canceled = true;
+    };
+  }, [product.dir, product.colors]);
 
   function handleColorChange(value: ICatalogColors) {
     setCurrentColor((prevValue) => (prevValue = value));
@@ -106,7 +131,7 @@ export default function ProductInfo({product}: IProductInfoProps) {
                       onChange={() => handleColorChange(color)}
                       key={color.tag}
                       tag={color.tag}
-                      preview={getCatalogColorPreviewUrl(product.dir, color.tag)}
+                      preview={colorPreviewMap[color.tag] ?? getCatalogColorPreviewUrl(product.dir, color.tag)}
                       isActive={currentColor === color}
                     />
                   );
