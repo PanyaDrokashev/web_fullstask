@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
-  const response = NextResponse.redirect(new URL("/", request.url));
+export async function GET() {
+  const response = NextResponse.redirect("/");
 
   response.cookies.delete("bruska_authorized");
   response.cookies.delete("bruska_user");
