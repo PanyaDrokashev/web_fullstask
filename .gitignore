@@ -1,0 +1,33 @@
+# OS / misc
+.DS_Store
+*.log
+
+# Secrets / local configs
+.env
+.env.local
+.env.*.local
+serviceAccountKey.json
+firebase.config
+firebase.config.json
+
+# Backend secrets/cache
+backend/.env
+backend/.gocache/
+backend/.gomodcache/
+
+# Frontend secrets/build/cache
+frontend/.env
+frontend/.env.local
+frontend/.next/
+frontend/node_modules/
+frontend/tsconfig.tsbuildinfo
+
+# IDE/editor
+.idea/
+.vscode/
+backend/.idea/
+frontend/.idea/
+frontend/.vscode/
+
+# Local accidental nested repo metadata
+frontend/.git/

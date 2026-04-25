@@ -1,0 +1,981 @@
+openapi: 3.0.3
+info:
+  title: BRUSKA REST API
+  version: 1.0.0
+  description: |
+    Документация REST API проекта BRUSKA.
+    Все маршруты имеют префикс `/bruska`.
+servers:
+  - url: /bruska
+tags:
+  - name: health
+    description: Проверка доступности сервиса
+  - name: content
+    description: Публичный контент для клиентского приложения
+  - name: admin-articles
+    description: CRUD статей и SSE-события
+  - name: admin-products
+    description: CRUD товаров и загрузка изображений
+paths:
+  /healthcheck:
+    get:
+      tags: [health]
+      summary: Проверка состояния сервиса
+      responses:
+        '200':
+          description: Сервис доступен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                required: [status]
+
+  /auth/session:
+    get:
+      tags: [content]
+      summary: Получить информацию о сессии Firebase
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Информация о текущем пользователе
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uid:
+                    type: string
+                  email:
+                    type: string
+                  name:
+                    type: string
+                  role:
+                    type: string
+                required: [uid, role]
+        '401':
+          description: Неавторизованный доступ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content/layout:
+    get:
+      tags: [content]
+      summary: Получить контент общего layout
+      parameters:
+        - in: query
+          name: authorized
+          schema:
+            type: boolean
+        - in: query
+          name: user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Контент layout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LayoutData'
+
+  /content/home:
+    get:
+      tags: [content]
+      summary: Получить контент главной страницы
+      responses:
+        '200':
+          description: Контент home
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeData'
+
+  /content/product-page:
+    get:
+      tags: [content]
+      summary: Получить контент продуктовой страницы
+      responses:
+        '200':
+          description: Контент product page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPageData'
+
+  /content/catalog:
+    get:
+      tags: [content]
+      summary: Получить список товаров каталога
+      responses:
+        '200':
+          description: Список товаров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+
+  /content/catalog/{id}:
+    get:
+      tags: [content]
+      summary: Получить товар каталога по ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Товар не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content/catalog/slides/{dir}:
+    get:
+      tags: [content]
+      summary: Получить список изображений слайдера для товарной папки
+      parameters:
+        - in: path
+          name: dir
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список URL изображений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Некорректное имя директории
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Директория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content/catalog/preview/{dir}:
+    get:
+      tags: [content]
+      summary: Получить preview-изображение товара
+      parameters:
+        - in: path
+          name: dir
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Файл изображения
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Некорректное имя директории
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Preview не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content/catalog/color-image/{dir}/{color}:
+    get:
+      tags: [content]
+      summary: Получить изображение цвета товара
+      parameters:
+        - in: path
+          name: dir
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: color
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Файл изображения
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Некорректные параметры
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Изображение не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content/articles:
+    get:
+      tags: [content]
+      summary: Получить список статей
+      responses:
+        '200':
+          description: Список статей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+
+  /content/articles/{id}:
+    get:
+      tags: [content]
+      summary: Получить статью по ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Статья найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Статья не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/articles:
+    get:
+      tags: [admin-articles]
+      summary: Получить список статей (админ)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список статей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Article'
+    post:
+      tags: [admin-articles]
+      summary: Создать статью
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleDraft'
+      responses:
+        '201':
+          description: Статья создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '400':
+          description: Ошибка валидации или некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/articles/{id}:
+    get:
+      tags: [admin-articles]
+      summary: Получить статью по ID (админ)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Статья найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Статья не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      tags: [admin-articles]
+      summary: Обновить статью
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleDraft'
+      responses:
+        '200':
+          description: Статья обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Article'
+        '400':
+          description: Ошибка валидации или некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Статья не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [admin-articles]
+      summary: Удалить статью
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Статья удалена
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Статья не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/articles/events:
+    get:
+      tags: [admin-articles]
+      summary: SSE поток событий по статьям
+      description: Возвращает события `created`, `updated`, `deleted` в формате Server-Sent Events.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /admin/products:
+    get:
+      tags: [admin-products]
+      summary: Получить список товаров (админ)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список товаров
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+    post:
+      tags: [admin-products]
+      summary: Создать товар
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDraft'
+      responses:
+        '201':
+          description: Товар создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '400':
+          description: Ошибка валидации или некорректные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/products/{id}:
+    get:
+      tags: [admin-products]
+      summary: Получить товар по ID (админ)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Товар найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogItem'
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Товар не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags: [admin-products]
+      summary: Удалить товар
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Товар удален
+        '400':
+          description: Некорректный ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Товар не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/products/preview-image:
+    post:
+      tags: [admin-products]
+      summary: Загрузить preview-изображение товара
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                dir:
+                  type: string
+                  example: kirpichik
+                image:
+                  type: string
+                  format: binary
+              required: [dir, image]
+      responses:
+        '201':
+          description: Файл загружен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PathResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Ошибка сохранения файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /admin/products/color-image:
+    post:
+      tags: [admin-products]
+      summary: Загрузить изображение цвета товара
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                dir:
+                  type: string
+                  example: kirpichik
+                color:
+                  type: string
+                  example: Серый
+                image:
+                  type: string
+                  format: binary
+              required: [dir, color, image]
+      responses:
+        '201':
+          description: Файл загружен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PathResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Ошибка сохранения файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    PathResponse:
+      type: object
+      properties:
+        path:
+          type: string
+      required: [path]
+
+    CatalogColor:
+      type: object
+      properties:
+        tag:
+          type: string
+      required: [tag]
+
+    CatalogSize:
+      type: object
+      properties:
+        length:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+      required: [length, width, height]
+
+    CatalogItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        tag:
+          type: string
+        title:
+          type: string
+        dir:
+          type: string
+        img:
+          type: string
+        sliderImages:
+          type: array
+          items:
+            type: string
+        price:
+          type: object
+          additionalProperties:
+            type: number
+        priceTag:
+          type: string
+        withBtn:
+          type: boolean
+        colors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogColor'
+        sizes:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogSize'
+        description:
+          type: array
+          items:
+            type: string
+        isAvailable:
+          type: boolean
+        onPallet:
+          type: number
+        weight:
+          type: number
+      required:
+        - id
+        - title
+        - dir
+        - img
+        - sliderImages
+        - price
+        - priceTag
+        - colors
+        - sizes
+        - description
+        - isAvailable
+        - onPallet
+        - weight
+
+    ProductColorDraft:
+      type: object
+      properties:
+        tag:
+          type: string
+        price:
+          type: number
+      required: [tag, price]
+
+    ProductDraft:
+      type: object
+      properties:
+        category:
+          type: string
+        title:
+          type: string
+        dir:
+          type: string
+        img:
+          type: string
+        priceTag:
+          type: string
+        basePrice:
+          type: number
+        color:
+          type: string
+        colors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductColorDraft'
+        description:
+          type: string
+        onPallet:
+          type: number
+        weight:
+          type: number
+        length:
+          type: integer
+        width:
+          type: integer
+        height:
+          type: integer
+        withBtn:
+          type: boolean
+        isAvailable:
+          type: boolean
+      required:
+        - category
+        - title
+        - dir
+        - img
+        - priceTag
+        - colors
+        - onPallet
+        - weight
+        - length
+        - width
+        - height
+        - withBtn
+        - isAvailable
+
+    ArticlePart:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [text, heading, image, list, ordered-list, preview]
+        content:
+          type: string
+        items:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: array
+              items:
+                type: object
+                additionalProperties: true
+      required: [type]
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        preview:
+          type: string
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticlePart'
+      required: [id, title, preview, content]
+
+    ArticleDraft:
+      type: object
+      properties:
+        title:
+          type: string
+        preview:
+          type: string
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticlePart'
+      required: [title, preview, blocks]
+
+    NavItem:
+      type: object
+      properties:
+        label:
+          type: string
+        href:
+          type: string
+        icon:
+          type: string
+          nullable: true
+      required: [label, href]
+
+    SessionInfo:
+      type: object
+      properties:
+        isAuthorized:
+          type: boolean
+        displayName:
+          type: string
+        primaryText:
+          type: string
+        primaryLink:
+          type: string
+        secondaryText:
+          type: string
+        secondaryLink:
+          type: string
+      required: [isAuthorized, primaryText, primaryLink]
+
+    FooterContact:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        value:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+        link:
+          type: string
+      required: [type, title]
+
+    FooterDoc:
+      type: object
+      properties:
+        title:
+          type: string
+        path:
+          type: string
+        file:
+          type: string
+      required: [title, path, file]
+
+    FooterData:
+      type: object
+      properties:
+        description:
+          type: string
+        brand:
+          type: string
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FooterContact'
+        docs:
+          type: array
+          items:
+            $ref: '#/components/schemas/FooterDoc'
+        copyright:
+          type: string
+      required: [description, brand, contacts, docs, copyright]
+
+    LayoutData:
+      type: object
+      properties:
+        siteName:
+          type: string
+        siteDescription:
+          type: string
+        navItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/NavItem'
+        session:
+          $ref: '#/components/schemas/SessionInfo'
+        footer:
+          $ref: '#/components/schemas/FooterData'
+      required: [siteName, siteDescription, navItems, session, footer]
+
+    HomeInfoCard:
+      type: object
+      properties:
+        iconKey:
+          type: string
+        title:
+          type: string
+        text:
+          type: string
+      required: [iconKey, title, text]
+
+    HomeData:
+      type: object
+      properties:
+        heroTitle:
+          type: string
+        heroSubtitle:
+          type: string
+        heroLeadText:
+          type: string
+        infoLeadText:
+          type: string
+        infoCards:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeInfoCard'
+      required: [heroTitle, heroSubtitle, heroLeadText, infoLeadText, infoCards]
+
+    ServicesCard:
+      type: object
+      properties:
+        title:
+          type: string
+        text:
+          type: string
+        items:
+          type: array
+          items:
+            type: string
+      required: [title]
+
+    ProductPageData:
+      type: object
+      properties:
+        packingParagraphs:
+          type: array
+          items:
+            type: string
+        servicesTitle:
+          type: string
+        servicesCards:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServicesCard'
+      required: [packingParagraphs, servicesTitle, servicesCards]

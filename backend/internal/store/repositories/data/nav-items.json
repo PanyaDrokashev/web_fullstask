@@ -1,0 +1,22 @@
+[
+  {
+    "label": "Все товары",
+    "href": "/catalog",
+    "icon": "shopping"
+  },
+  {
+    "label": "О компании",
+    "href": "/about",
+    "icon": null
+  },
+  {
+    "label": "Контакты",
+    "href": "/contacts",
+    "icon": null
+  },
+  {
+    "label": "Корзина",
+    "href": "/cart",
+    "icon": "shopping-basket"
+  }
+]

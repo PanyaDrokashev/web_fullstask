@@ -1,0 +1,7 @@
+[build]
+  command = "npm run build"
+  # do NOT point publish to .next here; let the plugin manage Next.js outputs
+  # If your site is fully static and you use next export, set publish = "out" instead
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

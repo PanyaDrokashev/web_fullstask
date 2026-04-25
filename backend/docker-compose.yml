@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bruska-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bruska
+      POSTGRES_USER: bruska
+      POSTGRES_PASSWORD: bruska
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bruska -d bruska"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  bruska:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bruska
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    environment:
+      DATABASE_URL: postgres://bruska:bruska@db:5432/bruska?sslmode=disable
+
+volumes:
+  postgres_data:

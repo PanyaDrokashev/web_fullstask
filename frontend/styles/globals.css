@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+	--breakpoint-xs: 36rem;
+	--breakpoint-s: 42rem; /*672*/
+	--breakpoint-md: 52rem;
+
+	--color-mainbg: #f9f9f9;
+	--color-darkbg: #2d2b28;
+
+	--color-dark: #1b1b1b;
+	--color-light: #fcfcfc;
+}
+
+@config "../tailwind.config.js";
+
+* {
+	box-sizing: border-box;
+}
+
+img {
+	border-radius: 24px;
+}
+
+.thumbs-swiper {
+	overflow: hidden;
+}
+
+.thumbs-swiper .swiper-wrapper {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	margin: 0 auto;
+}
+
+.thumbs-swiper.fit-content .swiper-wrapper {
+	justify-content: center !important;
+	pointer-events: none;
+}
+
+.thumbs-swiper.fit-content .swiper-slide {
+	pointer-events: auto;
+}
+
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
+@keyframes admin-toast-enter {
+	from {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.admin-toast-enter {
+	animation: admin-toast-enter 0.25s ease-out;
+}
+
+.article-richtext ul,
+.article-richtext ol {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.article-richtext ul {
+	list-style: disc;
+}
+
+.article-richtext ol {
+	list-style: decimal;
+}
+
+.article-richtext li {
+	margin: 0.25rem 0;
+}

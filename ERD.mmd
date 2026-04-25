@@ -1,0 +1,80 @@
+erDiagram
+    PRODUCT_CATEGORY ||--o{ PRODUCT : includes
+    PRODUCT ||--o{ PRODUCT_COLOR : has
+    PRODUCT ||--o{ PRODUCT_SIZE : has
+    PRODUCT ||--o{ PRODUCT_PRICE : has
+    PRODUCT ||--o{ PRODUCT_DESCRIPTION : has
+    ARTICLE ||--o{ ARTICLE_BLOCK : consists_of
+
+    PRODUCT_CATEGORY {
+        int id PK
+        string name
+    }
+
+    PRODUCT {
+        int id PK
+        int category_id FK
+        string tag
+        string title
+        string dir
+        string img
+        string price_tag
+        bool with_btn
+        bool is_available
+        decimal on_pallet
+        decimal weight
+    }
+
+    PRODUCT_COLOR {
+        int id PK
+        int product_id FK
+        string tag
+        int position
+    }
+
+    PRODUCT_SIZE {
+        int id PK
+        int product_id FK
+        int length
+        int width
+        int height
+        int position
+    }
+
+    PRODUCT_PRICE {
+        int id PK
+        int product_id FK
+        string color_tag
+        decimal amount
+        int position
+    }
+
+    PRODUCT_DESCRIPTION {
+        int id PK
+        int product_id FK
+        string body
+        int position
+    }
+
+    ARTICLE {
+        int id PK
+        string title
+        string preview
+    }
+
+    ARTICLE_BLOCK {
+        int id PK
+        int article_id FK
+        string block_type
+        string content
+        json items_json
+        int position
+    }
+
+    NAV_ITEM {
+        int id PK
+        string label
+        string href
+        string icon
+        int position
+    }
