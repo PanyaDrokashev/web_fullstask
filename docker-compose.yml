@@ -37,7 +37,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BACKEND_API_URL: http://localhost:8080/bruska
+        NEXT_PUBLIC_BACKEND_API_URL: ${NEXT_PUBLIC_BACKEND_API_URL:-http://localhost:8080/bruska}
     container_name: web-itmo-frontend
     depends_on:
       backend:
