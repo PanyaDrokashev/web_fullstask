@@ -50,3 +50,5 @@ services:
 
 volumes:
   postgres_data:
+
+# http://91.229.91.164:8080/bruska

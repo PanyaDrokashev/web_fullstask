@@ -59,7 +59,7 @@ export default async function RootLayout({
                 </a>
               ) : null}
               <a
-                href="/admin-logout"
+                href="/logout"
                 className={`h-8 px-3 rounded-md bg-white text-sm font-semibold flex items-center ${isAdmin ? "text-red-700" : "text-[#1f7a1f]"}`}
               >
                 Выйти

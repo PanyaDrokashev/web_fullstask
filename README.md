@@ -101,6 +101,23 @@ curl http://localhost:8080/bruska/content/catalog
 http://localhost:3000
 ```
 
+## Прод-сборка frontend: важная переменная
+Для production обязательно задавайте `NEXT_PUBLIC_BACKEND_API_URL` перед сборкой frontend-образа, иначе в клиентский бандл попадет `localhost`.
+
+Пример для сервера с IP `91.229.91.164`:
+
+```bash
+export NEXT_PUBLIC_BACKEND_API_URL=http://91.229.91.164:8080/bruska
+docker compose build --no-cache frontend
+docker compose up -d frontend
+```
+
+Проверить значение внутри compose можно командой:
+
+```bash
+docker compose config | grep NEXT_PUBLIC_BACKEND_API_URL
+```
+
 ## Запуск только backend-части
 Можно запустить compose внутри `backend/`:
 
